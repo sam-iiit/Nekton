@@ -1,0 +1,9 @@
+<!--This file will launch the code that will run on board Nekton-->
+<!--Eventually this will include things like the cameras and sonar nodes as well as whatever image processing and vehicle control code we have -->
+<launch>
+    <include file="$(find-pkg-share onboard_localization)/launch/localization.py"/>
+
+    <node pkg="onboard_forward_cam" exec="onboard_forward_cam" name="onboard_forward_cam"/>
+    <node pkg="onboard_forward_sonar" exec="onboard_forward_sonar" name="onboard_forward_sonar"/>
+    <node pkg="onboard_forward_sonar" exec="onboard_sonar_image" name="onboard_sonar_image"/>
+</launch>

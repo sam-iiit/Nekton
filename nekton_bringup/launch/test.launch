@@ -1,0 +1,14 @@
+<!--This file will launch the full nekton software suite for testing topside and onboard -->
+<launch>
+    <!-- might be better to have the topside/onboard launch files add their own groups instead -->
+    <group>
+        <push-ros-namespace namespace="topside"/>
+        <include file="$(find-pkg-share topside_bringup)/launch/topside.launch"/>
+    </group>
+
+    <group>
+        <include file="$(find-pkg-share nekton_bringup)/launch/odom_simulation.py"/>
+    </group>
+</launch>
+
+

@@ -1,0 +1,186 @@
+<?xml version="1.0"?>
+<robot name="nekton" xmlns:xacro="http://www.ros.org/wiki/xacro" >
+  <xacro:include filename="$(find nekton_description)/models/nekton/components/thrusters.xacro"/>
+  <xacro:include filename="$(find nekton_description)/models/nekton/components/sensors.xacro"/>
+
+
+  <xacro:property name="mesh_file" value="file://$(find nekton_description)/models/nekton/meshes/Nekton_body_mesh.STL"/>
+
+  <xacro:arg name="sim" default="false"/>
+  <xacro:arg name="static" default="false"/>
+
+
+  <xacro:property name="fluid_density" value="1025"/>
+
+  <xacro:property name="namespace" value="nekton"/>
+  <xacro:property name="mass" value="90"/>
+  <xacro:property name="volume" value="0.108"/>
+
+  <!-- Create nekton -->
+  <link name="base_link">
+    <inertial>
+      <!-- This is calculated for neutral buoyancy -->
+      <mass value="${(volume * fluid_density) - 1.05}"/>
+
+      <!-- TODO: insert actual calculations instead of precalculated value -->
+      <inertia
+        ixx="55" ixy="0" ixz="0"
+        iyy="0.585" iyz="0" izz="55"
+      />
+
+    </inertial>
+
+    <visual>
+      <origin xyz="0 0 0" rpy="0 ${90*pi/180} 0"/>
+      <geometry>
+        <mesh filename="${mesh_file}" scale="1 1 1" />
+      </geometry>
+
+      <material name="yellow">
+        <color rgba="1.0 1.0 0.0 0.3"/>
+      </material>
+    </visual>
+
+    <collision>
+      <origin xyz="0 0 0" rpy="0 ${90*pi/180} 0"/>
+      <geometry>
+        <mesh filename="${mesh_file}" scale="1 1 1" />
+      </geometry>
+    </collision>
+  </link>
+
+
+  <!-- Middle weight is present and affects bot, but for some reson wont show up in sensor tree -->
+  <link name="middle_weight">
+    <inertial>
+      <mass value="1"/> <!-- Adjust the mass value as needed -->
+      <!-- Add the inertia tensor values if known -->
+    </inertial>
+    <visual>
+      <!-- Add visual representation of the weight -->
+      <!-- For example, use a box as a visual representation -->
+      <geometry>
+        <box size="0.1 0.1 0.1"/> <!-- Adjust the size as needed -->
+      </geometry>
+      <material name="grey">
+        <color rgba="0.5 0.5 0.5 1"/>
+      </material>
+    </visual>
+  </link>
+
+  <joint name="middle_weight_joint" type="fixed">
+    <parent link="base_link"/>
+    <child link="middle_weight"/>
+    <origin xyz="0 0 -0.9"/> <!-- Adjust the position as needed -->
+  </joint>
+
+
+  <!-- Thrusters -->
+
+  <!-- Back Thruster -->
+  <xacro:T500_macro thruster_id="0">
+    <origin xyz="-1.375 0 0" rpy="0 ${90*pi/180} 0" />
+  </xacro:T500_macro>
+
+
+  <!-- Back Horizontal Thruster -->
+  <xacro:T200_macro thruster_id="1">
+    <origin xyz="-0.934 0 0" rpy="0 ${90*pi/180} ${90*pi/180}" />
+  </xacro:T200_macro>
+
+  <!-- Front Horizontal Thruster -->
+  <xacro:T200_macro thruster_id="2">
+    <origin xyz="0.952 0 0" rpy="0 ${90*pi/180} ${90*pi/180}" />
+  </xacro:T200_macro>
+
+
+
+  <!-- Back Vertical Thruster -->
+  <xacro:T200_macro thruster_id="3">
+    <origin xyz="-0.824 0 0" rpy="0 0 0" />
+  </xacro:T200_macro>
+
+  <!-- Front Vertical Thruster -->
+  <xacro:T200_macro thruster_id="4">
+    <origin xyz="0.828 0 0" rpy="0 0 0" />
+  </xacro:T200_macro>
+
+
+  <!-- Sensors -->
+
+  <!-- Forward Camera -->
+  <xacro:camera_macro camera_id="forward">
+    <origin xyz="1.3 0 0" rpy="0 0 0" />
+  </xacro:camera_macro>
+
+  <!-- Forward Sonar -->
+  <xacro:p900_macro sonar_id="forward">
+    <origin xyz="1.3 0 0" rpy="0 0 0" />
+  </xacro:p900_macro>
+
+  <!-- IMU -->
+  <xacro:imu_macro imu_id="0">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:imu_macro>
+
+  <!-- Pressure -->
+  <xacro:pressure_macro pressure_id="0">
+    <origin xyz="0 0 0" rpy="0 0 0" />
+  </xacro:pressure_macro>
+
+
+  <!-- Lock Nekton in place for sensor testing -->
+  <gazebo>
+    <static>$(arg static)</static>
+  </gazebo>
+
+  <!-- hydrodynamics and control plugins -->
+  <gazebo>
+    <!-- TODO: get actual numbers for this -->
+    <plugin
+      filename="gz-sim-hydrodynamics-system"
+      name="gz::sim::systems::Hydrodynamics">
+    <link_name> base_link </link_name>
+    	<!-- Incorrect Added Mass values causing crashes -->
+    <!--<xDotU>-4.876161</xDotU>
+        <yDotV>-126.324739</yDotV>
+        <zDotW>-126.324739</zDotW>
+        <kDotP>0</kDotP>
+        <mDotQ>-33.46</mDotQ>
+        <nDotR>-33.46</nDotR> -->
+
+
+        <!-- Added Mass -->
+        <xDotU>0</xDotU>
+        <yDotV>0</yDotV>
+        <zDotW>0</zDotW>
+        <kDotP>0</kDotP>
+        <mDotQ>0</mDotQ>
+        <nDotR>0</nDotR>
+
+    	<!-- Linear Drag -->
+        <xU>-10</xU>
+        <yV>-10</yV>
+        <zW>-10</zW>
+        <kP>-10</kP>
+        <mQ>-10</mQ>
+        <nR>-10</nR>
+
+    	<!-- Quadratic Drag -->
+        <xUabsU>-6.2282</xUabsU>
+        <yVabsV>-601.27</yVabsV>
+        <zWabsW>-601.27</zWabsW>
+        <kPabsP>-0.1916</kPabsP>
+        <mQabsQ>-632.698957</mQabsQ>
+        <nRabsR>-632.698957</nRabsR>
+    </plugin>
+
+    <!-- Publishes perfect odometry data for testing controllers -->
+    <plugin
+      filename="gz-sim-odometry-publisher-system"
+      name="gz::sim::systems::OdometryPublisher">
+      <dimensions>3</dimensions>
+    </plugin>
+  </gazebo>
+
+</robot>

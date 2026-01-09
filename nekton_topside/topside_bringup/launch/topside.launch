@@ -1,0 +1,5 @@
+<!-- This file will launch the topside software that will run on the above water computer to communicate with Nekton -->
+<!-- Eventually this will include things like the GUI for the cameras and sonar as well as the code to take joystick input to control Nekton -->
+<launch>
+	<include file="$(find-pkg-share topside_ui)/launch/ui.launch"/>
+</launch>
