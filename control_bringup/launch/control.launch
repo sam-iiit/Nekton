@@ -1,0 +1,38 @@
+<launch>
+  <arg name="model_name"  default="nekton"/>
+  <arg name="uuv_name" default="$(var model_name)"/>
+  <arg name="reset_tam" default="true"/>
+  <!-- TODO: trying to load a TAM file instead of generate it causes a crash -->
+
+  <include file="$(find-pkg-share uuv_thruster_manager)/launch/thruster_manager.launch">
+    <arg name="uuv_name" value="$(var uuv_name)" />
+    <arg name="model_name" value="$(var model_name)" />
+    <arg name="reset_tam" value="$(var reset_tam)" />
+    <arg name="output_dir" value="$(find-pkg-share nekton_description)/config" />
+    <arg name="config_file" value="$(find-pkg-share nekton_description)/config/thruster_manager.yaml" />
+    <arg name="tam_file" value="$(find-pkg-share nekton_description)/config/TAM.yaml" />
+  </include>
+
+  <group>
+    <push-ros-namespace namespace="$(var uuv_name)"/>
+
+
+    <!-- Acceleration PID controller node -->
+    <node pkg="uuv_control_cascaded_pid" exec="acceleration_control.py" name="acceleration_control"
+          output="log">
+      <param from="$(find-pkg-share nekton_description)/config/inertial.yaml"/>
+    </node>
+
+    <!-- Velocity PID controller node -->
+    <node pkg="uuv_control_cascaded_pid" exec="velocity_control.py" name="velocity_control"
+        output="log">
+      <remap from="odom" to="/$(var uuv_name)/pose_gt"/>
+      <remap from="cmd_accel" to="/$(var uuv_name)/cmd_accel"/>
+      <param from="$(find-pkg-share nekton_description)/config/vel_pid_control.yaml"/>
+    </node>
+
+    <!-- Keyboard input to velocity command (can't be run from launch file :/)-->
+    <!-- <node pkg="teleop_twist_keyboard" exec="teleop_twist_keyboard" name="keyboard_input"/> -->
+  </group>
+
+</launch>
